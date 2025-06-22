@@ -1,0 +1,38 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}Избранное - Сайт рецептов{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Избранные рецепты</h1>
+
+<div class="row">
+    {% for favorite in favorites %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if favorite.recipe.image %}
+            <img src="{{ favorite.recipe.image.url }}" class="card-img-top" alt="{{ favorite.recipe.title }}" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ favorite.recipe.title }}</h5>
+                <p class="card-text">{{ favorite.recipe.description|truncatewords:20 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Время: {{ favorite.recipe.cooking_time }} мин.</small>
+                        {% if favorite.recipe.average_rating > 0 %}
+                        <div class="text-warning">
+                            ★ {{ favorite.recipe.average_rating|floatformat:1 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'recipe_detail' favorite.recipe.pk %}" class="btn btn-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col">
+        <p>У вас пока нет избранных рецептов.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

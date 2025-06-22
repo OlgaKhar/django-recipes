@@ -1,0 +1,131 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}{{ recipe.title }} - Сайт рецептов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ recipe.title }}</h1>
+            {% if user.is_authenticated %}
+            <button class="btn btn-outline-primary favorite-btn" data-recipe-id="{{ recipe.pk }}" data-is-favorite="{{ is_favorite|yesno:'true,false' }}">
+                {% if is_favorite %}
+                ★ В избранном
+                {% else %}
+                ☆ Добавить в избранное
+                {% endif %}
+            </button>
+            {% endif %}
+        </div>
+        
+        <p class="text-muted">Автор: {{ recipe.author.username }} | Создан: {{ recipe.created_at|date:"d.m.Y" }}</p>
+        
+        {% if recipe.image %}
+        <img src="{{ recipe.image.url }}" class="img-fluid rounded mb-4" alt="{{ recipe.title }}">
+        {% endif %}
+
+        <div class="mb-4">
+            <h3>Описание</h3>
+            <p>{{ recipe.description }}</p>
+        </div>
+
+        <div class="mb-4">
+            <h3>Ингредиенты</h3>
+            <p>{{ recipe.ingredients|linebreaks }}</p>
+        </div>
+
+        <div class="mb-4">
+            <h3>Шаги приготовления</h3>
+            <p>{{ recipe.cooking_steps|linebreaks }}</p>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-muted">Время приготовления: {{ recipe.cooking_time }} минут</p>
+            {% if recipe.average_rating > 0 %}
+            <p class="text-warning">★ Средний рейтинг: {{ recipe.average_rating|floatformat:1 }}</p>
+            {% endif %}
+        </div>
+
+        {% if recipe.categories.all %}
+        <div class="mb-4">
+            <h3>Категории</h3>
+            <p>
+                {% for category in recipe.categories.all %}
+                <span class="badge bg-secondary">{{ category.name }}</span>
+                {% endfor %}
+            </p>
+        </div>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <div class="mb-4">
+            <h3>Оценить рецепт</h3>
+            <form method="post" class="d-flex align-items-center">
+                {% csrf_token %}
+                {{ rating_form.rating }}
+                <button type="submit" name="rating" class="btn btn-primary ms-2">Оценить</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+            <h3>Комментарии</h3>
+            {% if user.is_authenticated %}
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                {{ comment_form.text }}
+                <button type="submit" name="comment" class="btn btn-primary mt-2">Добавить комментарий</button>
+            </form>
+            {% endif %}
+
+            {% for comment in comments %}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">{{ comment.author.username }} | {{ comment.created_at|date:"d.m.Y H:i" }}</h6>
+                    <p class="card-text">{{ comment.text }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p>Пока нет комментариев. Будьте первым, кто оставит комментарий!</p>
+            {% endfor %}
+        </div>
+
+        {% if user == recipe.author %}
+        <div class="mt-4">
+            <a href="{% url 'recipe_edit' recipe.pk %}" class="btn btn-primary">Редактировать рецепт</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const favoriteBtn = document.querySelector('.favorite-btn');
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', function() {
+            const recipeId = this.dataset.recipeId;
+            fetch(`/recipe/${recipeId}/favorite/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'added') {
+                    this.textContent = '★ В избранном';
+                    this.dataset.isFavorite = 'true';
+                } else {
+                    this.textContent = '☆ Добавить в избранное';
+                    this.dataset.isFavorite = 'false';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %} 

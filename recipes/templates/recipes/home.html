@@ -1,0 +1,66 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}Главная - Сайт рецептов{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="card">
+            <div class="card-body">
+                <h5 class="card-title">Поиск рецептов</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.query }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.category }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ form.min_rating }}
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Поиск</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if request.GET %}
+<h2 class="mb-4">Результаты поиска</h2>
+{% else %}
+<h2 class="mb-4">Случайные рецепты</h2>
+{% endif %}
+
+<div class="row">
+    {% for recipe in recipes %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if recipe.image %}
+            <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ recipe.title }}</h5>
+                <p class="card-text">{{ recipe.description|truncatewords:20 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Время: {{ recipe.cooking_time }} мин.</small>
+                        {% if recipe.average_rating > 0 %}
+                        <div class="text-warning">
+                            ★ {{ recipe.average_rating|floatformat:1 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col">
+        <p>Рецепты не найдены.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 
